@@ -23,8 +23,7 @@ export default function Signin() {
       const token = response.data.access_token
       setToken(token);
       const {username} = decode(token)
-      handleUser(username)
-      Cookies.set('SIGN_IN', true, {expires: new Date().getTime() + 3600, path: '/', sameSite: true})
+      Cookies.set('USER', username, {expires: new Date().getTime() + 3600, path: '/', sameSite: true})
       router.push('/');
     }catch(err){
       console.log('err', err)
