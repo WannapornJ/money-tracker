@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import Link from 'next/link';
+// import Link from 'next/link';
 import { CgLogOff, CgMenu } from 'react-icons/cg'
 import Logo from './logo';
+import { removeToken } from '../utilities/loacalStorageServices';
+import Cookies from 'js-cookie'
 
 export default function Navbar({toggleSetting}) {
     const router = useRouter();
@@ -10,8 +12,9 @@ export default function Navbar({toggleSetting}) {
     const [logoutVislible, setLogoutVislible] = useState(false)
     const handleSignout = () => {
         setLogoutVislible(false)
-        window.localStorage.removeItem('acc_token');
+        removeToken()
         router.replace('/signin');
+        Cookies.remove('SIGN_IN')
     }
     const toggleModal = () => {
         setLogoutVislible(!logoutVislible)

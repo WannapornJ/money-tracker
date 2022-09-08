@@ -1,13 +1,18 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import Logo from './components/logo';
 import StyledInput from './components/input';
 import axios from './config/axios'
+import { setToken } from './utilities/loacalStorageServices';
+import { UserStore } from './utilities/userContext';
+import { decode } from 'jsonwebtoken';
+import Cookies from 'js-cookie';
 
 export default function Signin() {
   // eslint-disable-next-line react-hooks/rules-of-hooks
+  const { handleUser } = useContext(UserStore)
   const router = useRouter();
   const inputRef = useRef();
   const [signInData, setSignInData] = useState({username: '', password: ''});
@@ -15,7 +20,11 @@ export default function Signin() {
     e.preventDefault();
     try{
       const response = await axios.post('/user/login', {account: signInData.username, password: signInData.password})
-      window.localStorage.setItem('acc_token',response.data.access_token)
+      const token = response.data.access_token
+      setToken(token);
+      const {username} = decode(token)
+      handleUser(username)
+      Cookies.set('SIGN_IN', true, {expires: new Date().getTime() + 3600, path: '/', sameSite: true})
       router.push('/');
     }catch(err){
       console.log('err', err)
