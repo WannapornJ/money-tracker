@@ -4,29 +4,44 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useRef, useState } from 'react'
 import StyledInput from './components/input';
 import Logo from './components/logo';
+import axios from './config/axios'
 
 export default function Signup() {
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const router = useRouter();
   const inputRef = useRef();
-  const [signInData, setSignInData] = useState({username: '', password: ''});
-  const handleSignIn = (e) => {
+  const [signUpData, setSignUpData] = useState({ email: '', username: '', password: '', rePassword: '' })
+  const handleSignIn = async (e) => {
     e.preventDefault();
-    router.push('/signin');
+    const {username, email, password, rePassword} = signUpData
+    if (!username || !email || !password || !rePassword) {
+      alert('username, email, passord and re-password fields are required')
+      return
+    }
+    if (password !== rePassword) {
+      alert('Password doesn\'t match re-passeord')
+      return
+    }
+    try {
+      const response = await axios.post('/user/register', {
+        username: username,
+        email: email,
+        password: password
+      })
+      alert(response.data.message)
+      router.push('/signin');
+    } catch (err) {
+      alert(`Error: ${err.message}`);
+    }
   }
-  const collectUsername = (e) => {
-    setSignInData({...signInData, username: e.target.value});
-    
-  }
-  const collectPassword = (e) => {
-    setSignInData({...signInData, password: e.target.value});
-    
+  const collectUserData = (e, key) => {
+    setSignUpData({ ...signUpData, [key]: e.target.value });
   }
   useEffect(() => {
     inputRef.current.focus();
   }, [])
   return (
-    <div className='flex justify-center items-center w-screen h-screen'>
+    <div className='flex justify-center items-center w-full h-screen sm:h-[90vh]'>
       <Head>
         <title>Sign up</title>
       </Head>
@@ -41,23 +56,26 @@ export default function Signup() {
             refs={inputRef}
             type={'email'}
             title={'E-mail'}
-            change={collectUsername}
+            change={(e) => collectUserData(e, 'email')}
+            reqiure={true}
           />
           <StyledInput
-            // refs={inputRef}
             type={'text'}
             title={'Username'}
-            change={collectUsername}
+            change={(e) => collectUserData(e, 'username')}
+            reqiure={true}
           />
           <StyledInput
             type={'password'}
             title={'Password'}
-            change={collectPassword}
+            change={(e) => collectUserData(e, 'password')}
+            reqiure={true}
           />
           <StyledInput
             type={'password'}
             title={'Re-password'}
-            change={collectPassword}
+            change={(e) => collectUserData(e, 'rePassword')}
+            reqiure={true}
           />
           <button
             className='w-full text-white p-2 bg-yellow-200 hover:bg-yellow-100 rounded text-blue-300 border-2 border-blue-300 font-semibold text-lg '
