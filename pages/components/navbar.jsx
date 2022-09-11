@@ -1,20 +1,21 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { useRouter } from 'next/router';
-// import Link from 'next/link';
 import { CgLogOff, CgMenu } from 'react-icons/cg'
 import Logo from './logo';
 import { removeToken } from '../utilities/loacalStorageServices';
 import Cookies from 'js-cookie'
+import { UserStore } from '../utilities/userContext';
 
 export default function Navbar({toggleSetting}) {
+    const {user, handleUser} = useContext(UserStore)
     const router = useRouter();
-    const user = '';
     const [logoutVislible, setLogoutVislible] = useState(false)
     const handleSignout = () => {
         setLogoutVislible(false)
         removeToken()
+        Cookies.remove('TOKEN')
         router.replace('/signin');
-        Cookies.remove('SIGN_IN')
+        handleUser("")
     }
     const toggleModal = () => {
         setLogoutVislible(!logoutVislible)

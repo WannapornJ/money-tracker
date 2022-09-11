@@ -12,7 +12,7 @@ import Cookies from 'js-cookie';
 
 export default function Signin() {
   // eslint-disable-next-line react-hooks/rules-of-hooks
-  const { handleUser } = useContext(UserStore)
+  const userStore = useContext(UserStore)
   const router = useRouter();
   const inputRef = useRef();
   const [signInData, setSignInData] = useState({username: '', password: ''});
@@ -23,10 +23,11 @@ export default function Signin() {
       const token = response.data.access_token
       setToken(token);
       const {username} = decode(token)
-      Cookies.set('USER', username, {expires: new Date().getTime() + 3600, path: '/', sameSite: true})
+      userStore.handleUser(username)
+      Cookies.set('TOKEN', token, {expires: new Date().getTime() + 3600, path: '/', sameSite: true})
       router.push('/');
     }catch(err){
-      console.log('err', err)
+      alert('Error: failed to sign up, Please sign up again.')
     }
   }
   const collectUsername = (e) => {
@@ -41,11 +42,11 @@ export default function Signin() {
     inputRef.current.focus();
   }, [])
   return (
-    <div className='flex justify-center items-center w-screen h-screen'>
+    <div className='flex justify-center items-center w-full h-screen sm:h-[90vh]'>
       <Head>
         <title>Sign in</title>
       </Head>
-      <div className="h-screen w-screen sm:h-5/6 sm:w-4/12 sm:min-w-[480px] sm:max-h-[580px] bg-offWhite text-blue-300 p-12 sm:p-10 sm:pt-4 flex flex-col items-center justify-evenly sm:justify-between rounded gap-y-2">
+      <div className="h-screen w-screen sm:h-5/6 sm:w-4/12 min-w-[370px] sm:min-w-[480px] sm:max-h-[580px] bg-offWhite text-blue-300 p-12 sm:p-10 sm:pt-4 flex flex-col items-center justify-evenly sm:justify-between rounded gap-y-2">
         <Logo />
         <h1 className='text-2xl font-semibold'>Sign in</h1>
         <form
