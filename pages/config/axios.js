@@ -1,18 +1,19 @@
 import axios from 'axios';
-import { getToken, removeToken } from '../utilities/loacalStorageServices';
+import Cookies from 'js-cookie';
+import { removeToken } from '../utilities/loacalStorageServices';
 
 axios.defaults.baseURL = "http://localhost:8000";
 axios.interceptors.request.use(
     config => {
         if (config.url.includes("/login") || config.url.includes("/register")) return config
-        const token = getToken();
+        const token =  Cookies.get('TOKEN');
         if (token) {
             config.headers["Authorization"] = `Bearer ${token}`
         }
         return config
     },
     err => {
-        Promise.reject(err)
+        return Promise.reject(err)
     }
 )
 
@@ -21,8 +22,9 @@ axios.interceptors.response.use(
         return response
     },
     err => {
-        if (err.response?.status === 401 && getToken()) {
+        if (err.response?.status === 401 && Cookies.get('TOKEN')) {
             removeToken();
+            Cookies.remove('TOKEN')
             window.location.reload()
             alert({
                 message: "Login again please"
