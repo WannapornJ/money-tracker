@@ -1,34 +1,95 @@
+// import axios from 'axios';
+import axios from './config/axios'
 import Head from 'next/head';
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { CgTrashEmpty, CgPen, CgMathPlus } from 'react-icons/cg'
 import StyledInput from './components/input';
 
-export default function Category(props) {
-  const [data, setData] = useState([])
+export default function Category() {
   const [type, setType] = useState('expense')
-  const [category, setCategory] = useState({ type: '', name: '' })
+  const [category, setCategory] = useState({ id: null, type: 'expense', name: '', isActive: true, state: 'new' })
+  const [categories, setCategories] = useState([])
   const [modalVisible, setmodalVisible] = useState(false)
+  const [cfModal, setCfModal] = useState({ visible: false, clickCat: {} })
   const changeType = type => {
-    setData(props.category.filter(cat => cat.type === type))
     setType(type);
+    setCategory({ ...category, type })
   }
-  const toggleCategory = () => {
-    setmodalVisible(!modalVisible)
-  }
-  const setCatName = e => {
-    setCategory({ ...category, name: e.target.value })
-  }
-  const setCatType = e => {
-    setCategory({ ...category, type: e.target.value })
+  const setCatData = (e, key) => {
+    setCategory({ ...category, [key]: e.target.value })
   }
   const cancel = () => {
-    setmodalVisible(!modalVisible)
-    setCategory({ type: '', name: '' })
+    setmodalVisible(false)
+    setCategory({ type: '', name: '', isActive: true, state: 'new' })
+
   }
-  const save = () => {
-    setmodalVisible(!modalVisible)
-    setData([...data, { type: category.type, name: category.name }])
+  const getCat = async () => {
+    const response = await axios.get('/category')
+    setCategories(response.data)
   }
+  const save = async (e) => {
+    e.preventDefault();
+    if (category.state === 'new') {
+      try {
+        const res = await axios.post('/category', {
+          name: category.name,
+          type: category.type || 'expense',
+          isActive: category.isActive
+        })
+        setmodalVisible(!modalVisible)
+        setTimeout(() => {
+          alert(res.data.message)
+        }, 1500)
+        setType(category.type)
+        getCat()
+        return
+      } catch (err) {
+        alert('Error: Creating new category failed, Please try again.\n', err?.message)
+        setmodalVisible(!modalVisible)
+      }
+    } else {
+      try {
+        const res = await axios.patch('/category', {
+          categoryId: category.id,
+          name: category.name,
+          type: category.type
+        })
+        setmodalVisible(!modalVisible)
+        setType(category.type)
+        setTimeout(() => {
+          alert(res.data.message)
+        }, 1500)
+        getCat()
+        return
+      } catch (err) {
+        alert('Error: Updating a category failed, Please try again.\n', err?.message)
+        setmodalVisible(!modalVisible)
+      }
+    }
+  }
+  const removeCat = async (e, cat) => {
+    e.preventDefault();
+    try {
+      const res = await axios.patch('/category', {
+        categoryId: cat.id,
+        name: cat.name,
+        type: cat.type,
+        isActive: false
+      })
+      if (res.status === 200) {
+        setTimeout(() => {
+          alert('Deleted successfully')
+        }, 1500)
+        setCfModal({ clickCat: {}, visible: false })
+        getCat()
+      }
+    } catch (err) {
+      alert('Error: Deleting Failed\n', err?.message)
+    }
+  }
+  useEffect(() => {
+    getCat()
+  }, [])
   return (
     <div className='w-full'>
       <Head>
@@ -50,7 +111,7 @@ export default function Category(props) {
           </p>
         </div>
         {
-          data.map((cat) => {
+          categories.filter((cat) => cat.type === type && cat.isActive).map((cat) => {
             return (<div
               className='z-0 flex justify-between items-center mt-5 py-2 px-10'
               key={cat.id}
@@ -59,13 +120,22 @@ export default function Category(props) {
               <div className='flex min-w-[80px] justify-evenly items-center text-lg'>
                 <div
                   className='cursor-pointer w-5 h-5 text-gray-200'
-                  onClick={() => console.log('----- delete -----')}
+                  onClick={(e) => {
+                    if (confirm(`Are you sure to delete ${cat.name} ?`)){
+                      removeCat(e, cat)
+                    }else{
+                      setCfModal({visible: false, clickCat: {}})
+                    }
+                  }}
                 >
-                  <CgTrashEmpty />
+                  {cfModal.visible || <CgTrashEmpty />}
                 </div>
                 <div
                   className='cursor-pointer w-5 h-5'
-                  onClick={toggleCategory}
+                  onClick={() => {
+                    setmodalVisible(true);
+                    setCategory({ ...category, state: 'update', ...cat });
+                  }}
                 >
                   <CgPen />
                 </div>
@@ -75,73 +145,76 @@ export default function Category(props) {
         }
         <div
           className='p-8 min-h-[24px]'
-          onClick={toggleCategory}
+          onClick={() => {
+            setmodalVisible(!modalVisible);
+            setCategory({ ...category, state: 'new' });
+          }}
         >
           {modalVisible || <div
             className='text-gray-200 flex self-center justify-center cursor-pointer'
-            onClick={toggleCategory}
+            onClick={() => {
+              setmodalVisible(!modalVisible);
+              setCategory({ ...category, state: 'new' });
+            }}
           >
             <CgMathPlus className='w-5 h-5' /><p>New category</p>
           </div>}
         </div>
         {
           modalVisible &&
-          <div className='z-10 fixed inset-1 flex items-center justify-center w-full'>
-            <div className='shadow-[0_0_100vw_100vw_rgba(0,0,0,0.7)] w-6/12 h-[220px] min-w-[340px] bg-offWhite rounded max-w-[600px]'>
-              <p className='pl-5 py-5 border-b-[1px]'>New Category</p>
-              <div className='px-5 flex items-center content-center gap-4 mt-3'>
-                <div className='flex'>
-                  <label className='p-0 text-sm text-gray-200'>type
-                    <select
-                      className='w-full h-11 rounded bg-offWhite border border-gray-200 pl-3 text-blue-300'
-                      onChange={setCatType}
-                      value={category.type}
-                    >
-                      <option></option>
-                      <option value="income">Income</option>
-                      <option value="expense">Expense</option>
-                    </select>
-                  </label>
-                </div>
-                <div className='w-full'>
-                  <StyledInput
-                    title='name'
-                    type='text'
-                    change={setCatName}
-                    value={category.name}
-                  />
-                </div>
-              </div>
-              <div className='px-5 font-semibold flex justify-end gap-x-6 mt-5'>
-                <button
-                  className='border rounded p-2 border-blue-300 hover:bg-red w-3/12'
-                  onClick={cancel}
-                >
-                  cancel
-                </button>
-                <button
-                  className='border rounded p-2 border-blue-300 bg-yellow-200 hover:bg-yellow-100 w-5/12'
-                  onClick={save}
-                >
-                  Save
-                </button>
-              </div>
-            </div>
-          </div>
+          <ModalForm
+            save={save}
+            setCatData={setCatData}
+            category={category}
+            cancel={cancel}
+          />
         }
       </section>
     </div>
   )
 }
-export const getStaticProps = async () => {
-  return {
-    props: {
-      category: [
-        { id: 1, name: 'Food', type: 'expense' },
-        { id: 2, name: 'Bill', type: 'expense' },
-        { id: 3, name: 'Transportation', type: 'expense' },
-        { id: 4, name: 'Salary', type: 'income' }
-      ]
-    }
-  }
+
+export const ModalForm = (props) => {
+  const { save, setCatData, category, cancel } = props
+  return (<div className='z-10 fixed inset-1 flex items-center justify-center w-full'>
+    <form onSubmit={save} className='shadow-[0_0_100vw_100vw_rgba(0,0,0,0.7)] w-6/12 h-[220px] min-w-[340px] bg-offWhite rounded max-w-[600px]'>
+      <p className='pl-5 py-5 border-b-[1px]'>New Category</p>
+      <div className='px-5 flex items-center content-center gap-4 mt-3'>
+        <div className='flex'>
+          <label className='p-0 text-sm text-gray-200'>type
+            <select
+              className='w-full h-11 rounded bg-offWhite border border-gray-200 pl-3 text-blue-300'
+              onChange={(e) => { setCatData(e, 'type') }}
+              value={category?.type}
+            >
+              <option value="expense" selected>Expense</option>
+              <option value="income">Income</option>
+            </select>
+          </label>
+        </div>
+        <div className='w-full'>
+          <StyledInput
+            title='name'
+            type='text'
+            change={(e) => setCatData(e, 'name')}
+            value={category?.name}
+          />
+        </div>
+      </div>
+      <div className='px-5 font-semibold flex justify-end gap-x-6 mt-5'>
+        <button
+          className='border rounded p-2 border-blue-300 hover:bg-red w-3/12'
+          onClick={cancel}
+        >
+          cancel
+        </button>
+        <button
+          className='border rounded p-2 border-blue-300 bg-yellow-200 hover:bg-yellow-100 w-5/12'
+          type='submit'
+        >
+          Save
+        </button>
+      </div>
+    </form>
+  </div>)
 }
