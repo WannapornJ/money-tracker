@@ -4,7 +4,7 @@ const StyledInput = (props) => {
             <label className='p-0 text-sm text-gray-200'>{props.title}</label>
             <input
                 ref={props.refs}
-                className='w-full h-11 rounded bg-offWhite border border-gray-200 pl-3'
+                className={'w-full h-11 rounded bg-offWhite border border-gray-200 px-3'}
                 type={props.type}
                 value={props.value}
                 placeholder={props.placeholder}
