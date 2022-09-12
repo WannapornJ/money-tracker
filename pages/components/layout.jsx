@@ -16,7 +16,7 @@ export default function Layout(props) {
         <div className="block sm:hidden w-1/3">
           {modalToggle && <NavModal toggleModal={toggleModal} />}
         </div>
-        {user ? <div className="hidden sm:block w-1/4 min-w-[220px] m-3">
+        {user ? <div className="hidden sm:block min-w-[220px] m-3">
           <NavModal />
         </div> : null}
         <div className="w-full sm:w-2/3 h-full">{props.children}</div>

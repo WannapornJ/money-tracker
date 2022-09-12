@@ -65,18 +65,20 @@ export default function Home() {
   const modalToggle = (cat, track) => {
     setDetailModal({ ...detailModal, visible: true, catName: cat.name, catId: cat.id, bill_img: track.bill_img, cost: track.cost, date: track.date, trackId: track.id, title: track.title })
   }
-  const editToggle = async() => {
-    if(detailModal.edit){
+  const editToggle = async () => {
+    if (detailModal.edit) {
       setCount(false)
-    }else{
+      setDetailModal({...detailModal, edit: false})
+    } else {
       setRecord({ billImg: '', cateId: '', cost: '', date: new Date().toISOString().slice(0, 10), title: '' })
       setbillImg({ src: '', file: '', data: '' })
+      setDetailModal({...detailModal, edit: true})
     }
     try {
       const res = await axios.get("/category/")
       setCategory(res.data)
       setDetailModal({ ...detailModal, edit: !detailModal.edit })
-      
+
     } catch (err) {
       console.log("Error: fetching category failed", err)
       setCategory([])
@@ -159,10 +161,10 @@ export default function Home() {
       })
       alert(response.data.message)
       editToggle()
-      setDetailModal({...detailModal, visible: true, catId: record.cateId, bill_img: record.bill_img, cost: record.cost, date: record.date, title: record.title, edit: false})
-      if(tab === 'monthly'){
+      setDetailModal({ ...detailModal, visible: true, catId: record.cateId, bill_img: record.bill_img, cost: record.cost, date: record.date, title: record.title, edit: false })
+      if (tab === 'monthly') {
         setCount(new Date().getMonth())
-      }else{
+      } else {
         setCount(0)
       }
     } catch (error) {
@@ -170,14 +172,14 @@ export default function Home() {
       editToggle()
       setRecord({ billImg: '', cateId: '', cost: '', date: new Date().toISOString().slice(0, 10), title: '' })
       setbillImg({ src: '', file: '', data: '' })
-      if(tab === 'monthly'){
+      if (tab === 'monthly') {
         setCount(new Date().getMonth())
-      }else{
+      } else {
         setCount(0)
       }
     }
   }
-
+  
   useEffect(() => {
     if (tab === 'daily') {
       const getDailyTrack = async () => {
@@ -218,7 +220,6 @@ export default function Home() {
       getMonthlyTrack()
     }
   }, [tab, count])
-  console.log('data :>> ', data);
   return (
     <div className='flex justify-center h-full py-3'>
       <Head>
@@ -226,7 +227,7 @@ export default function Home() {
         <meta name="description" content="Online money tracking" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <section className='mr-3 bg-gray-100 rounded text-blue-300 w-8/12 sm:w-2/3'>
+      <section className='mr-3 bg-gray-100 rounded text-blue-300 w-8/12 sm:w-full sm:w-2/3 min-w-[310px]'>
         <div className='mx-3 my-3 bg-offWhite rounded'>
           <ul className='flex justify-around border-b-[1px] border-gray-200 p-1 text-lg font-extrabold mt-3'>
             <li className={tab === 'monthly' ? 'text-blue-300 px-3 py-2 rounded cursor-default' : 'text-gray-200 hover:text-blue-100 hover:border-b-2 border-blue-100 px-3 py-1 cursor-pointer'} onClick={() => changeTab('monthly', new Date().getMonth() + 1)}>Month</li>
@@ -260,6 +261,14 @@ export default function Home() {
             className='flex items-center gap-x-2 text-offWhite bg-blue-100 hover:bg-blue-200 rounded p-3 border border-blue-300'
             onClick={toggleAddingModal}><CgMathPlus />New record</button>
         </div>
+        <div className='block md:hidden mx-3 my-3 md:mx-0 md:my-0'>
+          {detailModal.visible && <ListDetail
+            data={detailModal}
+            editToggle={editToggle}
+            setRecord={setRecord}
+            record={record}
+          />}
+        </div>
         {addingModalVisible &&
           <TrackForm
             billImg={billImg}
@@ -285,7 +294,10 @@ export default function Home() {
               {data?.targetTracking?.filter(({ type }) => type === 'income').map(item => {
                 return (
                   <div key={item.id} className='border-b border-gray-100 mt-1 overflow-y-scroll'>
-                    <h3 className='text-blue-100'>{item.name}</h3>
+                    <div className="flex justify-between items-center">
+                      <h3 className='text-blue-100'>{item.name}</h3>
+                      <h3 className='text-blue-100'>{item?.Trackings?.reduce((acc, cur) => acc + cur.cost, 0)}</h3>
+                    </div>
                     {item?.Trackings?.map(track => (
                       <div key={track.id} className='flex justify-between items-center text-sm py-1 cursor-pointer' onClick={() => modalToggle(item, track)}>
                         <div>
@@ -306,7 +318,10 @@ export default function Home() {
               {data?.targetTracking?.filter(({ type }) => type === 'expense').map(item => {
                 return (
                   <div key={item.id} className='border-b border-gray-100 mt-1 overflow-y-scroll'>
-                    <h3 className='text-blue-100'>{item.name}</h3>
+                    <div className="flex justify-between items-center">
+                      <h3 className='text-blue-100'>{item.name}</h3>
+                      <h3 className='text-blue-100'>{item?.Trackings?.reduce((acc, cur) => acc + cur.cost, 0)}</h3>
+                    </div>
                     {item?.Trackings?.map(track => (
                       <div key={track.id} className='flex justify-between items-center text-sm py-1 cursor-pointer' onClick={() => modalToggle(item, track)}>
                         <div>
@@ -323,8 +338,13 @@ export default function Home() {
           </div>
         </div>
       </section >
-      <aside className='hidden sm:block w-1/3 max-h-[200px]'>
-        {detailModal.visible && <ListDetail data={detailModal} editToggle={editToggle} setRecord={setRecord} record={record} />}
+      <aside className='hidden md:block w-1/3 max-h-[200px]'>
+        {detailModal.visible && <ListDetail
+          data={detailModal}
+          editToggle={editToggle}
+          setRecord={setRecord}
+          record={record}
+        />}
         {detailModal.edit &&
           <div className='text-blue-300'>
             <TrackForm
@@ -359,7 +379,7 @@ export const TrackForm = (props) => {
                 <input type="file" name='file' accept="image/png, image/jpeg, image/jpg" />
                 <div className={billImg.data ? 'text-green' : 'text-gray-100'}>{billImg.data && billImg.src ? '✓' : 'X'}</div>
               </div>
-              <Image src={record.bill_img ? record.bill_img : billImg.src? billImg.src : 'https://res.cloudinary.com/wannaj/image/upload/v1662886036/mt/gray-bg_t7lxmf.jpg'} width={150} height={150} alt='tracking bill' className='rounded' />
+              <Image src={record.bill_img ? record.bill_img : billImg.src ? billImg.src : 'https://res.cloudinary.com/wannaj/image/upload/v1662886036/mt/gray-bg_t7lxmf.jpg'} width={150} height={150} alt='tracking bill' className='rounded' />
               {billImg.src && !billImg.data && <button className='hover:text-blue-300 font-extrabold' onClick={uploadImg}>Upload</button>}
             </label>
           </div>
