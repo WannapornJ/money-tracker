@@ -91,11 +91,11 @@ export default function Category() {
     getCat()
   }, [])
   return (
-    <div className='w-full'>
+    <div className='w-full flex justify-center items-cemter sm:block mt-5 sm:mt-0'>
       <Head>
         <title>setting-category</title>
       </Head>
-      <section className='relative w-full sm:my-3 sm:mr-3 bg-offWhite rounded text-blue-300 w-5/6 min-h-[185px] min-w-full sm:min-w-[350px] flex flex-col'>
+      <section className='relative w-full sm:w-full sm:my-3 bg-offWhite rounded text-blue-300 w-5/6 min-h-[185px] flex flex-col'>
         <div className='flex justify-around mt-3 border-b-[1px] border-gray-200 p-1 text-lg font-extrabold'>
           <p
             className={type === 'income' ? 'text-blue-300 px-3 py-2 rounded cursor-default' : 'text-gray-200 hover:text-blue-100 hover:border-b-2 border-blue-100 px-3 py-1 cursor-pointer'}
