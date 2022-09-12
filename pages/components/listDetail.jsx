@@ -19,7 +19,7 @@ export default function ListDetail(props) {
     }
   }
   return (
-    <div className=' inset-1 sm:mr-3 bg-gray-100 rounded text-blue-300 sm:h-[210px] sm:min-w-[285px] box-border flex flex-col justify-evenly'>
+    <div className=' inset-0 md:inset-1 sm:mr-3 bg-offWhite md:bg-gray-100 rounded text-blue-300 sm:h-[210px] sm:min-w-[285px] box-border flex flex-col justify-evenly'>
       <div className='flex items-center justify-between border-b-[1px] border-gray-200 text-sm'>
         <p className='p-3'>Tracnsaction detail</p>
         <div className='p-3 flex items-center justify-end gap-x-3'>
